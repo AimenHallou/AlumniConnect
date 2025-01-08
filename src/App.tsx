@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Network, Briefcase, Users, Globe2, ArrowRight, ChevronRight } from 'lucide-react';
+import { supabase } from './lib/supabase';
 import OnboardingForm from './components/OnboardingForm';
 import Feed from './pages/Feed';
 import Directory from './pages/Directory';
 import Messages from './pages/Messages';
+import Register from './pages/Register';
+import Profile from './pages/Profile';
+import Login from './pages/Login';
 
 function LogoSlider() {
   const logos = [
@@ -41,17 +45,40 @@ function LogoSlider() {
   );
 }
 
-function App() {
+function AppContent() {
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
+  useEffect(() => {
+    supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    // Check initial auth state
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+    });
+  }, []);
+
+  // Show loading state while checking auth
+  if (isAuthenticated === null) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <Router>
       <Routes>
-        <Route path="/feed" element={<Feed />} />
-        <Route path="/directory" element={<Directory />} />
-        <Route path="/messages" element={<Messages />} />
+        <Route path="/feed" element={isAuthenticated ? <Feed /> : <Navigate to="/login" />} />
+        <Route path="/directory" element={isAuthenticated ? <Directory /> : <Navigate to="/login" />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/messages" element={isAuthenticated ? <Messages /> : <Navigate to="/login" />} />
+        <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/home" element={<Navigate to="/feed" replace />} />
         <Route path="/" element={
+          isAuthenticated ? (
+            <Navigate to="/feed" replace />
+          ) : (
           <div className="min-h-screen bg-white">
             {showOnboarding && <OnboardingForm onClose={() => setShowOnboarding(false)} />}
             
@@ -62,8 +89,13 @@ function App() {
                   <Network className="h-8 w-8" />
                   <span className="text-xl font-bold">Alumni Connect</span>
                 </div>
-                <div className="hidden md:flex space-x-6">
-                  <a href="#about" className="hover:text-green-200">About</a>
+                <div className="hidden md:flex space-x-4">
+                  <button 
+                    onClick={() => navigate('/login')}
+                    className="text-white hover:text-green-200"
+                  >
+                    Login
+                  </button>
                   <button 
                     onClick={() => setShowOnboarding(true)}
                     className="bg-white text-green-800 px-4 py-2 rounded-lg font-semibold hover:bg-green-100 transition"
@@ -182,8 +214,16 @@ function App() {
               </div>
             </footer>
           </div>
+          )
         } />
       </Routes>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }

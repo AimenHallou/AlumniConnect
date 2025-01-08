@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Users, MessageCircle } from 'lucide-react';
+import { LayoutDashboard, Users, MessageCircle, Settings, User } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 export default function Sidebar() {
@@ -11,7 +11,8 @@ export default function Sidebar() {
       <div className="p-4 border-b">
         <h2 className="text-xl font-semibold text-green-800">Alumni Connect</h2>
       </div>
-      <nav className="p-4">
+      <nav className="flex flex-col h-[calc(100%-64px)]">
+        <div className="p-4 flex-1">
         <ul className="space-y-2">
           <li>
             <Link
@@ -47,6 +48,18 @@ export default function Sidebar() {
             </Link>
           </li>
         </ul>
+        </div>
+        <div className="p-4 border-t">
+          <Link
+            to="/profile"
+            className={`flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 ${
+              isActive('/profile') ? 'bg-green-50 text-green-800' : 'text-gray-700'
+            }`}
+          >
+            <User size={20} />
+            <span>Profile & Settings</span>
+          </Link>
+        </div>
       </nav>
     </div>
   );

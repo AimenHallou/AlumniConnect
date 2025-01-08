@@ -104,12 +104,9 @@ export default function OnboardingForm({ onClose }: OnboardingFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Store the form data in localStorage
     localStorage.setItem('userData', JSON.stringify(formData));
-    // Close the form
     onClose();
-    // Navigate to feed
-    navigate('/feed');
+    navigate('/register', { state: { email: formData.email } });
   };
 
   return (
@@ -556,11 +553,10 @@ export default function OnboardingForm({ onClose }: OnboardingFormProps) {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Clubs, organizations, or extracurricular activities *
+                    Clubs, organizations, or extracurricular activities
                   </label>
                   <textarea
                     name="activities"
-                    required
                     className="w-full p-2 border rounded-lg"
                     value={formData.activities}
                     onChange={handleInputChange}
