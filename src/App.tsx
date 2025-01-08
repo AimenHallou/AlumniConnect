@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { Network, Briefcase, Users, Globe2, ArrowRight, ChevronRight } from 'lucide-react';
+import { Network, Briefcase, Users, Globe2, ArrowRight } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import OnboardingForm from './components/OnboardingForm';
 import Feed from './pages/Feed';
@@ -51,7 +51,7 @@ function AppContent() {
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
-    supabase.auth.onAuthStateChange((event, session) => {
+    supabase.auth.onAuthStateChange((session) => {
       setIsAuthenticated(!!session);
     });
 

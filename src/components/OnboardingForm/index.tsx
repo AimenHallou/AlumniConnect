@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { FormData, UserType } from './types';
+import { FormData } from './types';
 import StepOne from './StepOne';
 import StepTwo from './StepTwo';
 import StepThree from './StepThree';
@@ -63,9 +63,9 @@ export default function OnboardingForm({ onClose }: OnboardingFormProps) {
   const handleMultiSelect = (name: string, value: string) => {
     setFormData(prev => ({
       ...prev,
-      [name]: prev[name].includes(value)
-        ? prev[name].filter(item => item !== value)
-        : [...prev[name], value]
+      [name]: (prev[name as keyof FormData] as string[]).includes(value)
+        ? (prev[name as keyof FormData] as string[]).filter(item => item !== value)
+        : [...(prev[name as keyof FormData] as string[]), value]
     }));
   };
 

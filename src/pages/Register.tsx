@@ -33,7 +33,7 @@ export default function Register() {
     supabase.auth.signInWithPassword({
         email,
         password,
-    }).then(({ data, error }) => {
+    }).then(({ error }) => {
       if (!error) {
         // User exists and credentials are correct, proceed to feed
         navigate('/feed');

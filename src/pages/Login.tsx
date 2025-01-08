@@ -27,7 +27,7 @@ export default function Login() {
         navigate('/feed');
       }
     } catch (err) {
-      if (err.message.includes('Invalid login credentials')) {
+      if ((err as Error).message.includes('Invalid login credentials')) {
         setError('Invalid email or password');
       } else {
         setError('An error occurred. Please try again.');

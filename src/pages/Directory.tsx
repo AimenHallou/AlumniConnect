@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, MapPin, Briefcase, GraduationCap, MessageCircle } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { supabase } from '../lib/supabase';
