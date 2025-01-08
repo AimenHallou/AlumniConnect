@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 type UserType = 'student' | 'alumni';
 
@@ -77,6 +78,7 @@ interface OnboardingFormProps {
 }
 
 export default function OnboardingForm({ onClose }: OnboardingFormProps) {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const totalSteps = formData.userType === 'student' ? 5 : 5;
@@ -102,8 +104,12 @@ export default function OnboardingForm({ onClose }: OnboardingFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(formData);
+    // Store the form data in localStorage
+    localStorage.setItem('userData', JSON.stringify(formData));
+    // Close the form
     onClose();
+    // Navigate to feed
+    navigate('/feed');
   };
 
   return (
