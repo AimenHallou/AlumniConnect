@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, MapPin, Briefcase, GraduationCap, MessageCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import { supabase } from '../lib/supabase';
 
@@ -15,13 +16,18 @@ interface Profile {
 }
 
 export default function Directory() {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setCurrentUserId(user.id);
+    });
     loadProfiles();
   }, []);
 
@@ -48,6 +54,86 @@ export default function Directory() {
                          (profile.degree?.toLowerCase() || '').includes(searchQuery.toLowerCase());
     return matchesFilter && matchesSearch;
   });
+
+  const handleMessageClick = async (profileId: string) => {
+    console.log('Starting message click handler...', { profileId, currentUserId });
+    
+    try {
+      if (!currentUserId) {
+        throw new Error('You must be logged in to send messages');
+      }
+
+      // Check if a conversation already exists between these users
+      const { data: existingConversations, error: existingError } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', currentUserId);
+
+      console.log('Existing conversations query result:', { existingConversations, error: existingError });
+
+      let conversationId: string | null = null;
+
+      if (existingConversations && existingConversations.length > 0) {
+        // Get all conversation IDs where current user is a participant
+        const conversationIds = existingConversations.map(c => c.conversation_id);
+        console.log('Found existing conversation IDs:', conversationIds);
+
+        // Find conversations where the other user is also a participant
+        const { data: sharedConversations, error: sharedError } = await supabase
+          .from('conversation_participants')
+          .select('conversation_id')
+          .eq('user_id', profileId)
+          .in('conversation_id', conversationIds)
+          .limit(1)
+          .single();
+
+        console.log('Shared conversations query result:', { sharedConversations, error: sharedError });
+
+        if (sharedConversations) {
+          conversationId = sharedConversations.conversation_id;
+          console.log('Found existing shared conversation:', conversationId);
+        }
+      }
+
+      // If no conversation exists, create a new one
+      if (!conversationId) {
+        console.log('No existing conversation found, creating new one...');
+        
+        const { data: newConversation, error: conversationError } = await supabase
+          .from('conversations')
+          .insert({})
+          .select()
+          .single();
+
+        console.log('New conversation creation result:', { newConversation, error: conversationError });
+
+        if (conversationError) throw conversationError;
+        
+        conversationId = newConversation.id;
+        console.log('Created new conversation:', conversationId);
+
+        // Add both users as participants
+        const { data: participants, error: participantsError } = await supabase
+          .from('conversation_participants')
+          .insert([
+            { conversation_id: conversationId, user_id: currentUserId },
+            { conversation_id: conversationId, user_id: profileId }
+          ])
+          .select();
+
+        console.log('Adding participants result:', { participants, error: participantsError });
+
+        if (participantsError) throw participantsError;
+      }
+
+      console.log('Navigating to messages with conversation:', conversationId);
+      // Navigate to the messages page with the conversation ID
+      navigate(`/messages?conversation=${conversationId}`);
+    } catch (err) {
+      console.error('Error in handleMessageClick:', err);
+      setError('Failed to start conversation');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -149,7 +235,15 @@ export default function Directory() {
                       View LinkedIn
                     </a>
                   )}
-                  <button className="flex items-center space-x-1 text-green-800 hover:text-green-700 ml-auto">
+                  <button 
+                    onClick={() => handleMessageClick(profile.id)}
+                    disabled={profile.id === currentUserId}
+                    className={`flex items-center space-x-1 ml-auto ${
+                      profile.id === currentUserId 
+                        ? 'text-gray-400 cursor-not-allowed' 
+                        : 'text-green-800 hover:text-green-700'
+                    }`}
+                  >
                     <MessageCircle size={18} />
                     <span>Message</span>
                   </button>

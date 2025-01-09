@@ -51,15 +51,25 @@ function AppContent() {
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
-    supabase.auth.onAuthStateChange((session) => {
-      setIsAuthenticated(!!session);
-    });
-
     // Check initial auth state
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session);
     });
-  }, []);
+
+    // Subscribe to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+      if (event === 'SIGNED_IN') {
+        navigate('/feed');
+      } else if (event === 'SIGNED_OUT') {
+        navigate('/login');
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
 
   // Show loading state while checking auth
   if (isAuthenticated === null) {
@@ -67,18 +77,18 @@ function AppContent() {
   }
 
   return (
-      <Routes>
-        <Route path="/feed" element={isAuthenticated ? <Feed /> : <Navigate to="/login" />} />
-        <Route path="/directory" element={isAuthenticated ? <Directory /> : <Navigate to="/login" />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/messages" element={isAuthenticated ? <Messages /> : <Navigate to="/login" />} />
-        <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/home" element={<Navigate to="/feed" replace />} />
-        <Route path="/" element={
-          isAuthenticated ? (
-            <Navigate to="/feed" replace />
-          ) : (
+    <Routes>
+      <Route path="/feed" element={isAuthenticated ? <Feed /> : <Navigate to="/login" />} />
+      <Route path="/directory" element={isAuthenticated ? <Directory /> : <Navigate to="/login" />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/messages" element={isAuthenticated ? <Messages /> : <Navigate to="/login" />} />
+      <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" />} />
+      <Route path="/login" element={isAuthenticated ? <Navigate to="/feed" /> : <Login />} />
+      <Route path="/home" element={<Navigate to="/feed" replace />} />
+      <Route path="/" element={
+        isAuthenticated ? (
+          <Navigate to="/feed" replace />
+        ) : (
           <div className="min-h-screen bg-white">
             {showOnboarding && <OnboardingForm onClose={() => setShowOnboarding(false)} />}
             
@@ -214,9 +224,9 @@ function AppContent() {
               </div>
             </footer>
           </div>
-          )
-        } />
-      </Routes>
+        )
+      } />
+    </Routes>
   );
 }
 
