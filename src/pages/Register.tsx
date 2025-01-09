@@ -53,20 +53,26 @@ export default function Register() {
       if (signUpError) throw signUpError;
 
       if (data?.user) {
-        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        const profileData = {
+          id: data.user.id,
+          full_name: location.state?.fullName || '',
+          email: email,
+          user_type: location.state?.userType || '',
+          graduation_year: location.state?.graduationYear || '',
+          current_year: location.state?.currentYear || '',
+          degree: location.state?.degree || '',
+          location: location.state?.location || '',
+          linkedin_url: location.state?.linkedIn || '',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
         
         supabase
           .from('profiles')
-          .insert([{
-            id: data.user.id,
-            full_name: userData.fullName,
-            user_type: userData.userType,
-            graduation_year: userData.graduationYear,
-            current_year: userData.currentYear,
-            degree: userData.degree,
-            location: userData.location,
-            linkedin_url: userData.linkedIn,
-          }]);
+          .upsert([profileData], {
+            onConflict: 'id',
+            ignoreDuplicates: false
+          });
       }
       
       navigate('/feed');

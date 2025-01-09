@@ -71,9 +71,26 @@ export default function OnboardingForm({ onClose }: OnboardingFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('OnboardingForm - Form Data before submission:', formData);
+    
     localStorage.setItem('userData', JSON.stringify(formData));
+    console.log('OnboardingForm - Data saved to localStorage:', JSON.parse(localStorage.getItem('userData') || '{}'));
+    
+    const navigationState = { 
+      email: formData.email,
+      fullName: formData.fullName,
+      userType: formData.userType,
+      graduationYear: formData.graduationYear,
+      currentYear: formData.currentYear,
+      degree: formData.degree,
+      location: formData.location,
+      linkedIn: formData.linkedIn
+    };
+    
+    console.log('OnboardingForm - Navigation state being passed:', navigationState);
+    
     onClose();
-    navigate('/register', { state: { email: formData.email } });
+    navigate('/register', { state: navigationState });
   };
 
   const renderStep = () => {
