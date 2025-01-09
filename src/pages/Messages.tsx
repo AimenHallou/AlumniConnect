@@ -18,6 +18,8 @@ export default function Messages() {
   const [searchQuery, setSearchQuery] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const MESSAGE_CHAR_LIMIT = 2000;
+
   const { conversations, isLoading: conversationsLoading } = useConversations(currentUserId);
   const { messages, sendMessage } = useMessages(selectedConversation?.id || null);
 
@@ -50,7 +52,7 @@ export default function Messages() {
   }, [searchParams, navigate, conversations]);
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation || !currentUserId) return;
+    if (!newMessage.trim() || !selectedConversation || !currentUserId || newMessage.length > MESSAGE_CHAR_LIMIT) return;
     
     const success = await sendMessage(newMessage, selectedConversation, currentUserId);
     if (success) {
@@ -120,7 +122,12 @@ export default function Messages() {
                         placeholder="Type a message..."
                         className="flex-1 p-2 border rounded-lg"
                         value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
+                        onChange={(e) => {
+                          if (e.target.value.length <= MESSAGE_CHAR_LIMIT) {
+                            setNewMessage(e.target.value);
+                          }
+                        }}
+                        maxLength={MESSAGE_CHAR_LIMIT}
                         onKeyPress={(e) => {
                           if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault();
@@ -130,7 +137,12 @@ export default function Messages() {
                       />
                       <button 
                         onClick={handleSendMessage}
-                        className="p-2 bg-green-800 text-white rounded-lg hover:bg-green-700"
+                        disabled={!newMessage.trim() || newMessage.length > MESSAGE_CHAR_LIMIT}
+                        className={`p-2 rounded-lg ${
+                          !newMessage.trim() || newMessage.length > MESSAGE_CHAR_LIMIT
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : 'bg-green-800 text-white hover:bg-green-700'
+                        }`}
                       >
                         <Send size={20} />
                       </button>

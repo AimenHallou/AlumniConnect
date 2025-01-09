@@ -1,7 +1,19 @@
 import { useState, useEffect } from 'react';
-import { ThumbsUp, MessageCircle, Share2, Trash2 } from 'lucide-react';
+import { ThumbsUp, MessageCircle, Trash2, Send } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { supabase } from '../lib/supabase';
+
+interface Comment {
+  id: string;
+  content: string;
+  created_at: string;
+  user_id: string;
+  profiles: {
+    full_name: string;
+    user_type: string;
+    degree: string;
+  };
+}
 
 interface Post {
   id: string;
@@ -14,7 +26,7 @@ interface Post {
     degree: string;
   };
   likes: { id: string; user_id: string }[];
-  comments: { id: string }[];
+  comments: Comment[];
 }
 
 export default function Feed() {
@@ -23,6 +35,11 @@ export default function Feed() {
   const [newPost, setNewPost] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeCommentPost, setActiveCommentPost] = useState<string | null>(null);
+  const [newComment, setNewComment] = useState('');
+
+  const POST_CHAR_LIMIT = 500;
+  const COMMENT_CHAR_LIMIT = 200;
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -43,7 +60,17 @@ export default function Feed() {
             degree
           ),
           likes (id, user_id),
-          comments (id)
+          comments (
+            id,
+            content,
+            created_at,
+            user_id,
+            profiles (
+              full_name,
+              user_type,
+              degree
+            )
+          )
         `)
         .order('created_at', { ascending: false });
 
@@ -58,7 +85,7 @@ export default function Feed() {
   };
 
   const handleCreatePost = async () => {
-    if (!newPost.trim()) return;
+    if (!newPost.trim() || newPost.length > POST_CHAR_LIMIT) return;
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -75,6 +102,32 @@ export default function Feed() {
     } catch (err) {
       console.error('Error creating post:', err);
       setError('Failed to create post');
+    }
+  };
+
+  const handleCreateComment = async (postId: string) => {
+    if (!newComment.trim() || newComment.length > COMMENT_CHAR_LIMIT) return;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('comments')
+        .insert([{ 
+          content: newComment, 
+          user_id: user.id,
+          post_id: postId 
+        }]);
+
+      if (error) throw error;
+
+      setNewComment('');
+      setActiveCommentPost(null);
+      loadPosts();
+    } catch (err) {
+      console.error('Error creating comment:', err);
+      setError('Failed to create comment');
     }
   };
 
@@ -147,12 +200,29 @@ export default function Feed() {
             className="w-full p-3 border rounded-lg resize-none"
             rows={3}
             value={newPost}
-            onChange={(e) => setNewPost(e.target.value)}
+            onChange={(e) => {
+              if (e.target.value.length <= POST_CHAR_LIMIT) {
+                setNewPost(e.target.value);
+              }
+            }}
+            maxLength={POST_CHAR_LIMIT}
           />
-          <div className="mt-3 flex justify-end">
+          <div className="mt-3 flex justify-between items-center">
+            <span className={`text-sm ${
+              newPost.length > POST_CHAR_LIMIT * 0.9 
+                ? 'text-red-500' 
+                : 'text-gray-500'
+            }`}>
+              {newPost.length}/{POST_CHAR_LIMIT} characters
+            </span>
             <button
               onClick={handleCreatePost}
-              className="bg-green-800 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+              disabled={newPost.length > POST_CHAR_LIMIT}
+              className={`px-4 py-2 rounded-lg ${
+                newPost.length > POST_CHAR_LIMIT
+                  ? 'bg-gray-300 cursor-not-allowed'
+                  : 'bg-green-800 hover:bg-green-700 text-white'
+              }`}
             >
               Post
             </button>
@@ -207,15 +277,80 @@ export default function Feed() {
                     <ThumbsUp size={18} />
                     <span>{post.likes?.length || 0}</span>
                   </button>
-                  <button className="flex items-center space-x-2 hover:text-green-800">
+                  <button 
+                    onClick={() => setActiveCommentPost(activeCommentPost === post.id ? null : post.id)}
+                    className={`flex items-center space-x-2 hover:text-green-800 ${
+                      activeCommentPost === post.id ? 'text-green-800 font-semibold' : ''
+                    }`}
+                  >
                     <MessageCircle size={18} />
                     <span>{post.comments?.length || 0}</span>
                   </button>
-                  <button className="flex items-center space-x-2 hover:text-green-800">
-                    <Share2 size={18} />
-                    <span>Share</span>
-                  </button>
                 </div>
+
+                {/* Comments Section */}
+                {(activeCommentPost === post.id || post.comments?.length > 0) && (
+                  <div className="mt-4 pt-4 border-t">
+                    {/* Comment List */}
+                    {post.comments?.map(comment => (
+                      <div key={comment.id} className="flex items-start space-x-3 mb-3">
+                        <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 text-sm font-semibold">
+                          {comment.profiles.full_name?.split(' ').map(n => n[0]).join('')}
+                        </div>
+                        <div className="flex-1 bg-gray-50 rounded-lg p-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <span className="font-medium text-sm">{comment.profiles.full_name}</span>
+                              <span className="text-xs text-gray-500 ml-2">{formatTimestamp(comment.created_at)}</span>
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-700 mt-1">{comment.content}</p>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Add Comment */}
+                    {activeCommentPost === post.id && (
+                      <div className="flex items-start space-x-3 mt-3">
+                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-800 text-sm font-semibold">
+                          {post.profiles.full_name?.split(' ').map(n => n[0]).join('')}
+                        </div>
+                        <div className="flex-1">
+                          <div className="relative">
+                            <textarea
+                              placeholder="Write a comment..."
+                              className="w-full p-2 pr-24 border rounded-lg resize-none text-sm"
+                              rows={2}
+                              value={newComment}
+                              onChange={(e) => {
+                                if (e.target.value.length <= COMMENT_CHAR_LIMIT) {
+                                  setNewComment(e.target.value);
+                                }
+                              }}
+                              maxLength={COMMENT_CHAR_LIMIT}
+                            />
+                            <div className="absolute bottom-2 right-2 flex items-center space-x-2">
+                              <span className="text-xs text-gray-400">
+                                {newComment.length}/{COMMENT_CHAR_LIMIT}
+                              </span>
+                              <button
+                                onClick={() => handleCreateComment(post.id)}
+                                disabled={!newComment.trim() || newComment.length > COMMENT_CHAR_LIMIT}
+                                className={`p-1.5 rounded-lg ${
+                                  !newComment.trim() || newComment.length > COMMENT_CHAR_LIMIT
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    : 'bg-green-800 text-white hover:bg-green-700'
+                                }`}
+                              >
+                                <Send size={14} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
