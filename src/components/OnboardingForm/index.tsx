@@ -48,7 +48,7 @@ export default function OnboardingForm({ onClose }: OnboardingFormProps) {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<FormData>(initialFormData);
-  const totalSteps = formData.userType === 'student' ? 5 : 5;
+  const totalSteps = 5;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -71,6 +71,13 @@ export default function OnboardingForm({ onClose }: OnboardingFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Only proceed if we're on the last step
+    if (step !== totalSteps) {
+      setStep(step + 1);
+      return;
+    }
+
     console.log('OnboardingForm - Form Data before submission:', formData);
     
     localStorage.setItem('userData', JSON.stringify(formData));
@@ -139,22 +146,12 @@ export default function OnboardingForm({ onClose }: OnboardingFormProps) {
                   Previous
                 </button>
               )}
-              {step < totalSteps ? (
-                <button
-                  type="button"
-                  onClick={() => setStep(step + 1)}
-                  className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-700 ml-auto"
-                >
-                  Next
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-700 ml-auto"
-                >
-                  Submit
-                </button>
-              )}
+              <button
+                type="submit"
+                className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-700 ml-auto"
+              >
+                {step === totalSteps ? 'Submit' : 'Next'}
+              </button>
             </div>
           </form>
         </div>
