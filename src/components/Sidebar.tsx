@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, MessageCircle, Settings, User } from 'lucide-react';
+import { LayoutDashboard, Users, MessageCircle, User } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 export default function Sidebar() {
@@ -6,56 +6,80 @@ export default function Sidebar() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="fixed w-64 h-full bg-white shadow-lg">
-      <div className="p-4 border-b">
-        <h2 className="text-xl font-semibold text-green-800">Alumni Connect</h2>
-      </div>
-      <nav className="flex flex-col h-[calc(100%-64px)]">
-        <div className="p-4 flex-1">
-        <ul className="space-y-2">
-          <li>
-            <Link
-              to="/feed"
-              className={`flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 ${
-                isActive('/feed') ? 'bg-green-50 text-green-800' : 'text-gray-700'
-              }`}
-            >
-              <LayoutDashboard size={20} />
-              <span>Feed</span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/directory"
-              className={`flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 ${
-                isActive('/directory') ? 'bg-green-50 text-green-800' : 'text-gray-700'
-              }`}
-            >
-              <Users size={20} />
-              <span>Directory</span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/messages"
-              className={`flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 ${
-                isActive('/messages') ? 'bg-green-50 text-green-800' : 'text-gray-700'
-              }`}
-            >
-              <MessageCircle size={20} />
-              <span>Messages</span>
-            </Link>
-          </li>
-        </ul>
+    <div className="fixed w-64 h-full bg-gradient-to-b from-white to-gray-50 border-r border-gray-200">
+      <div className="px-6 py-5 border-b border-gray-200">
+        <div className="flex items-center space-x-2">
+          <svg className="w-6 h-6 text-green-800" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="16" cy="16" r="4" fill="currentColor"/>
+            <circle cx="8" cy="8" r="3" fill="currentColor"/>
+            <circle cx="24" cy="8" r="3" fill="currentColor"/>
+            <circle cx="24" cy="24" r="3" fill="currentColor"/>
+            <circle cx="8" cy="24" r="3" fill="currentColor"/>
+            <line x1="11.5" y1="11.5" x2="13.5" y2="13.5" stroke="currentColor" strokeWidth="1.5"/>
+            <line x1="18.5" y1="13.5" x2="20.5" y2="11.5" stroke="currentColor" strokeWidth="1.5"/>
+            <line x1="18.5" y1="18.5" x2="20.5" y2="20.5" stroke="currentColor" strokeWidth="1.5"/>
+            <line x1="11.5" y1="20.5" x2="13.5" y2="18.5" stroke="currentColor" strokeWidth="1.5"/>
+          </svg>
+          <h2 className="text-lg font-semibold text-gray-900">Alumni Connect</h2>
         </div>
-        <div className="p-4 border-t">
+      </div>
+      <nav className="flex flex-col h-[calc(100%-72px)]">
+        <div className="p-4 flex-1">
+          <div className="mb-2 px-2">
+            <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Main Menu</span>
+          </div>
+          <ul className="space-y-1">
+            <li>
+              <Link
+                to="/feed"
+                className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors duration-150 ${
+                  isActive('/feed')
+                    ? 'bg-green-50 text-green-800 font-medium shadow-sm'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+              >
+                <LayoutDashboard size={18} className="flex-shrink-0" />
+                <span>Feed</span>
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/directory"
+                className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors duration-150 ${
+                  isActive('/directory')
+                    ? 'bg-green-50 text-green-800 font-medium shadow-sm'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+              >
+                <Users size={18} className="flex-shrink-0" />
+                <span>Directory</span>
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/messages"
+                className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors duration-150 ${
+                  isActive('/messages')
+                    ? 'bg-green-50 text-green-800 font-medium shadow-sm'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+              >
+                <MessageCircle size={18} className="flex-shrink-0" />
+                <span>Messages</span>
+              </Link>
+            </li>
+          </ul>
+        </div>
+        <div className="p-4 border-t border-gray-200 bg-gray-50">
           <Link
             to="/profile"
-            className={`flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 ${
-              isActive('/profile') ? 'bg-green-50 text-green-800' : 'text-gray-700'
+            className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors duration-150 ${
+              isActive('/profile')
+                ? 'bg-green-50 text-green-800 font-medium shadow-sm'
+                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
             }`}
           >
-            <User size={20} />
+            <User size={18} className="flex-shrink-0" />
             <span>Profile & Settings</span>
           </Link>
         </div>
