@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, MapPin, GraduationCap, Briefcase, LogOut, Save, Lock, ExternalLink } from 'lucide-react';
+import { User, Mail, MapPin, GraduationCap, Briefcase, LogOut, Save, Lock, ExternalLink, Moon, Sun } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import Sidebar from '../components/Sidebar';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface ProfileFormData {
   full_name: string;
@@ -15,6 +16,7 @@ interface ProfileFormData {
 
 export default function Profile() {
   const navigate = useNavigate();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -166,7 +168,7 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <Sidebar />
         <div className="ml-64 p-8">
           <div className="animate-pulse">Loading...</div>
@@ -176,32 +178,32 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Sidebar />
       <div className="ml-64 p-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-800 mb-8">Profile & Settings</h1>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-8">Profile & Settings</h1>
 
           {/* Profile Card */}
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden mb-6">
             {/* Header Section */}
-            <div className="p-6 border-b border-gray-100">
+            <div className="p-6 border-b border-gray-100 dark:border-gray-700">
               <div className="flex items-start space-x-4">
-                <div className="w-24 h-24 bg-gradient-to-br from-green-50 to-green-100 rounded-xl flex items-center justify-center text-green-800 text-2xl font-semibold shadow-sm">
+                <div className="w-24 h-24 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-xl flex items-center justify-center text-green-800 dark:text-green-100 text-2xl font-semibold shadow-sm">
                   {formData?.full_name?.split(' ').map((n: string) => n[0]).join('')}
                 </div>
                 <div className="flex-1">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h2 className="text-xl font-semibold text-gray-900">{formData?.full_name}</h2>
-                      <p className="text-gray-500 mt-1">{profile?.user_type === 'student' ? 'Student' : 'Alumni'}</p>
+                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{formData?.full_name}</h2>
+                      <p className="text-gray-500 dark:text-gray-400 mt-1">{profile?.user_type === 'student' ? 'Student' : 'Alumni'}</p>
                     </div>
                     <button
                       onClick={() => setIsEditing(!isEditing)}
                       className={`px-4 py-2 rounded-lg transition-colors ${
                         isEditing 
-                          ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          : 'bg-green-50 text-green-700 hover:bg-green-100'
+                          ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                          : 'bg-green-50 dark:bg-green-900 text-green-700 dark:text-green-100 hover:bg-green-100 dark:hover:bg-green-800'
                       }`}
                     >
                       {isEditing ? 'Cancel' : 'Edit Profile'}
@@ -333,17 +335,17 @@ export default function Profile() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500 mb-2">Location</h3>
-                      <div className="flex items-center text-gray-800">
-                        <MapPin className="w-5 h-5 mr-3 text-gray-400" />
+                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Location</h3>
+                      <div className="flex items-center text-gray-800 dark:text-gray-200">
+                        <MapPin className="w-5 h-5 mr-3 text-gray-400 dark:text-gray-500" />
                         <span>{formData?.location || 'Not specified'}</span>
                       </div>
                     </div>
                     
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500 mb-2">Education</h3>
-                      <div className="flex items-center text-gray-800">
-                        <GraduationCap className="w-5 h-5 mr-3 text-gray-400" />
+                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Education</h3>
+                      <div className="flex items-center text-gray-800 dark:text-gray-200">
+                        <GraduationCap className="w-5 h-5 mr-3 text-gray-400 dark:text-gray-500" />
                         <span>{formData?.degree || 'Not specified'}</span>
                       </div>
                     </div>
@@ -352,17 +354,17 @@ export default function Profile() {
                   <div className="space-y-4">
                     {profile?.user_type === 'student' ? (
                       <div>
-                        <h3 className="text-sm font-medium text-gray-500 mb-2">Academic Status</h3>
-                        <div className="flex items-center text-gray-800">
-                          <User className="w-5 h-5 mr-3 text-gray-400" />
+                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Academic Status</h3>
+                        <div className="flex items-center text-gray-800 dark:text-gray-200">
+                          <User className="w-5 h-5 mr-3 text-gray-400 dark:text-gray-500" />
                           <span>{formData?.current_year ? `${formData.current_year} Year` : 'Not specified'}</span>
                         </div>
                       </div>
                     ) : (
                       <div>
-                        <h3 className="text-sm font-medium text-gray-500 mb-2">Graduation</h3>
-                        <div className="flex items-center text-gray-800">
-                          <Briefcase className="w-5 h-5 mr-3 text-gray-400" />
+                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Graduation</h3>
+                        <div className="flex items-center text-gray-800 dark:text-gray-200">
+                          <Briefcase className="w-5 h-5 mr-3 text-gray-400 dark:text-gray-500" />
                           <span>{formData?.graduation_year ? `Class of ${formData.graduation_year}` : 'Not specified'}</span>
                         </div>
                       </div>
@@ -374,25 +376,35 @@ export default function Profile() {
           </div>
 
           {/* Settings Section */}
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-800">Account Settings</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-gray-100 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Account Settings</h3>
             </div>
             
             <div className="p-6 space-y-6">
-              <div>
+              <div className="flex flex-col space-y-4">
+                {/* Dark Mode Toggle */}
+                <button
+                  onClick={toggleDarkMode}
+                  className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                >
+                  {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+                  <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
+                </button>
+
+                {/* Password Change Button */}
                 <button
                   onClick={() => setShowPasswordForm(!showPasswordForm)}
-                  className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 transition-colors"
+                  className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                   <Lock size={20} />
                   <span>Change Password</span>
                 </button>
 
                 {showPasswordForm && (
-                  <div className="mt-4 space-y-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="mt-4 space-y-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         New Password
                       </label>
                       <input
@@ -400,12 +412,12 @@ export default function Profile() {
                         name="newPassword"
                         value={passwordData.newPassword}
                         onChange={handlePasswordChange}
-                        className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full p-2.5 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Confirm New Password
                       </label>
                       <input
@@ -413,7 +425,7 @@ export default function Profile() {
                         name="confirmPassword"
                         value={passwordData.confirmPassword}
                         onChange={handlePasswordChange}
-                        className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full p-2.5 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                       />
                     </div>
 
@@ -427,10 +439,10 @@ export default function Profile() {
                 )}
               </div>
 
-              <div className="pt-4 border-t border-gray-100">
+              <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
                 <button
                   onClick={handleSignOut}
-                  className="flex items-center space-x-2 text-red-600 hover:text-red-700 transition-colors"
+                  className="flex items-center space-x-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors"
                 >
                   <LogOut size={20} />
                   <span>Sign Out</span>
