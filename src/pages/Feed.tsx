@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ThumbsUp, MessageCircle, Trash2, Send } from 'lucide-react';
+import { ThumbsUp, MessageCircle, Trash2, Send, X } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { supabase } from '../lib/supabase';
 
@@ -37,6 +37,7 @@ export default function Feed() {
   const [error, setError] = useState('');
   const [activeCommentPost, setActiveCommentPost] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
   const POST_CHAR_LIMIT = 500;
   const COMMENT_CHAR_LIMIT = 200;
@@ -167,6 +168,7 @@ export default function Feed() {
         .eq('id', postId);
 
       if (error) throw error;
+      setPostToDelete(null);
       loadPosts();
     } catch (err) {
       console.error('Error deleting post:', err);
@@ -235,6 +237,40 @@ export default function Feed() {
           </div>
         )}
 
+        {/* Delete Confirmation Modal */}
+        {postToDelete && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Delete Post</h3>
+                <button
+                  onClick={() => setPostToDelete(null)}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete this post? This action cannot be undone.
+              </p>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setPostToDelete(null)}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleDeletePost(postToDelete)}
+                  className="px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="text-center py-8">Loading posts...</div>
         ) : (
@@ -256,7 +292,7 @@ export default function Feed() {
                   </div>
                   {post.user_id === currentUserId && (
                     <button
-                      onClick={() => handleDeletePost(post.id)}
+                      onClick={() => setPostToDelete(post.id)}
                       className="ml-auto p-2 text-gray-400 hover:text-red-600 rounded-full hover:bg-red-50"
                       title="Delete post"
                     >
