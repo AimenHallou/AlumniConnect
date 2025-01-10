@@ -9,31 +9,6 @@ interface StepOneProps {
 export default function StepOne({ formData, handleInputChange }: StepOneProps) {
   return (
     <div className="space-y-4">
-      <div className="flex gap-4 mb-6">
-        <button
-          type="button"
-          className={`flex-1 py-2 px-4 rounded-lg ${
-            formData.userType === 'student'
-              ? 'bg-green-800 text-white'
-              : 'bg-gray-100'
-          }`}
-          onClick={() => handleInputChange({ target: { name: 'userType', value: 'student' } } as any)}
-        >
-          I'm a Student
-        </button>
-        <button
-          type="button"
-          className={`flex-1 py-2 px-4 rounded-lg ${
-            formData.userType === 'alumni'
-              ? 'bg-green-800 text-white'
-              : 'bg-gray-100'
-          }`}
-          onClick={() => handleInputChange({ target: { name: 'userType', value: 'alumni' } } as any)}
-        >
-          I'm an Alumni
-        </button>
-      </div>
-
       <h3 className="text-lg font-semibold">Personal Information</h3>
       
       <div>
