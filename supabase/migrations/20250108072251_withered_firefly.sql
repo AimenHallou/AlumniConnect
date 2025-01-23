@@ -22,8 +22,8 @@ END $$;
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, created_at, updated_at)
-  VALUES (new.id, new.email, now(), now());
+  INSERT INTO public.profiles (id, email, user_type, created_at, updated_at)
+  VALUES (new.id, new.email, 'student', now(), now());
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

@@ -12,7 +12,18 @@ interface ProfileFormData {
   graduation_year?: string;
   current_year?: string;
   linkedin_url: string;
+  occupation: string;
+  company: string;
+  company_logo_url?: string;
+  major: string;
+  profile_photo_url: string;
 }
+
+const getCompanyLogo = (companyName: string): string | undefined => {
+  if (!companyName) return undefined;
+  // Using Clearbit Logo API - no API key required for this endpoint
+  return `https://logo.clearbit.com/${companyName.toLowerCase().replace(/[^a-zA-Z0-9]/g, '')}.com`;
+};
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -42,7 +53,12 @@ export default function Profile() {
         degree: profile.degree || '',
         graduation_year: profile.graduation_year || '',
         current_year: profile.current_year || '',
-        linkedin_url: profile.linkedin_url || ''
+        linkedin_url: profile.linkedin_url || '',
+        occupation: profile.occupation || '',
+        company: profile.company || '',
+        company_logo_url: profile.company_logo_url || '',
+        major: profile.major || '',
+        profile_photo_url: profile.profile_photo_url || ''
       });
     }
   }, [profile]);
@@ -65,38 +81,39 @@ export default function Profile() {
           degree,
           location,
           linkedin_url,
-          email
+          email,
+          occupation,
+          company,
+          company_logo_url,
+          major,
+          profile_photo_url
         `)
         .eq('id', user.id)
         .single();
 
-      if (!profile) {
-        const { error: insertError } = await supabase
-          .from('profiles')
-          .insert([{ 
-            id: user.id,
-            email: user.email,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }]);
-          
-        if (insertError) throw insertError;
-        
-        const { data: newProfile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-          
-        setProfile(newProfile);
-        return;
-      }
-      
       if (error) {
-        throw error;
-      }
-      
-      if (profile) {
+        // Only create a new profile if the error is "not found"
+        if (error.code === 'PGRST116') {
+          const { data: newProfile, error: insertError } = await supabase
+            .from('profiles')
+            .insert([{ 
+              id: user.id,
+              email: user.email,
+              user_type: 'student', // Set default user type
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }])
+            .select()
+            .single();
+            
+          if (insertError) throw insertError;
+          if (newProfile) {
+            setProfile(newProfile);
+          }
+        } else {
+          throw error;
+        }
+      } else if (profile) {
         setProfile(profile);
       }
     } catch (error) {
@@ -189,14 +206,26 @@ export default function Profile() {
             {/* Header Section */}
             <div className="p-6 border-b border-gray-100 dark:border-gray-700">
               <div className="flex items-start space-x-4">
-                <div className="w-24 h-24 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-xl flex items-center justify-center text-green-800 dark:text-green-100 text-2xl font-semibold shadow-sm">
-                  {formData?.full_name?.split(' ').map((n: string) => n[0]).join('')}
+                <div className="w-24 h-24 rounded-xl overflow-hidden shadow-sm">
+                  {formData?.profile_photo_url ? (
+                    <img 
+                      src={formData.profile_photo_url} 
+                      alt={formData?.full_name} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 flex items-center justify-center text-green-800 dark:text-green-100 text-2xl font-semibold">
+                      {formData?.full_name?.split(' ').map((n: string) => n[0]).join('')}
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1">
                   <div className="flex justify-between items-start">
                     <div>
                       <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{formData?.full_name}</h2>
-                      <p className="text-gray-500 dark:text-gray-400 mt-1">{profile?.user_type === 'student' ? 'Student' : 'Alumni'}</p>
+                      <p className="text-gray-500 dark:text-gray-400 mt-1">
+                        {formData?.occupation} {formData?.company ? `at ${formData.company}` : ''}
+                      </p>
                     </div>
                     <button
                       onClick={() => setIsEditing(!isEditing)}
@@ -250,6 +279,32 @@ export default function Profile() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Occupation
+                      </label>
+                      <input
+                        type="text"
+                        name="occupation"
+                        value={formData?.occupation}
+                        onChange={handleInputChange}
+                        className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Company
+                      </label>
+                      <input
+                        type="text"
+                        name="company"
+                        value={formData?.company}
+                        onChange={handleInputChange}
+                        className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
                         Location
                       </label>
                       <input
@@ -269,6 +324,19 @@ export default function Profile() {
                         type="text"
                         name="degree"
                         value={formData?.degree}
+                        onChange={handleInputChange}
+                        className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Major
+                      </label>
+                      <input
+                        type="text"
+                        name="major"
+                        value={formData?.major}
                         onChange={handleInputChange}
                         className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       />
@@ -301,6 +369,33 @@ export default function Profile() {
                         />
                       </div>
                     )}
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Profile Photo URL
+                      </label>
+                      <input
+                        type="url"
+                        name="profile_photo_url"
+                        value={formData?.profile_photo_url}
+                        onChange={handleInputChange}
+                        className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Company Logo URL
+                      </label>
+                      <input
+                        type="url"
+                        name="company_logo_url"
+                        value={formData?.company_logo_url}
+                        onChange={handleInputChange}
+                        className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="https://example.com/logo.png"
+                      />
+                    </div>
 
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -346,29 +441,38 @@ export default function Profile() {
                       <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Education</h3>
                       <div className="flex items-center text-gray-800 dark:text-gray-200">
                         <GraduationCap className="w-5 h-5 mr-3 text-gray-400 dark:text-gray-500" />
-                        <span>{formData?.degree || 'Not specified'}</span>
+                        <div>
+                          <p>{formData?.degree} {formData?.major ? `in ${formData.major}` : ''}</p>
+                          {formData?.graduation_year && <p className="text-sm text-gray-500">Class of {formData.graduation_year}</p>}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="space-y-4">
-                    {profile?.user_type === 'student' ? (
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Academic Status</h3>
-                        <div className="flex items-center text-gray-800 dark:text-gray-200">
-                          <User className="w-5 h-5 mr-3 text-gray-400 dark:text-gray-500" />
-                          <span>{formData?.current_year ? `${formData.current_year} Year` : 'Not specified'}</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Graduation</h3>
-                        <div className="flex items-center text-gray-800 dark:text-gray-200">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Work</h3>
+                      <div className="flex items-center text-gray-800 dark:text-gray-200">
+                        {formData?.company ? (
+                          <img 
+                            src={getCompanyLogo(formData.company)}
+                            alt={formData.company}
+                            className="w-5 h-5 mr-3 object-contain"
+                            onError={(e) => {
+                              // Fallback to Briefcase icon if logo fetch fails
+                              e.currentTarget.style.display = 'none';
+                              const fallback = document.createElement('span');
+                              fallback.innerHTML = '<svg class="w-5 h-5 mr-3 text-gray-400 dark:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>';
+                              e.currentTarget.parentNode?.insertBefore(fallback.firstChild!, e.currentTarget);
+                            }}
+                          />
+                        ) : (
                           <Briefcase className="w-5 h-5 mr-3 text-gray-400 dark:text-gray-500" />
-                          <span>{formData?.graduation_year ? `Class of ${formData.graduation_year}` : 'Not specified'}</span>
+                        )}
+                        <div>
+                          <p>{formData?.occupation || 'Not specified'}</p>
+                          {formData?.company && <p className="text-sm text-gray-500">{formData.company}</p>}
                         </div>
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
               )}

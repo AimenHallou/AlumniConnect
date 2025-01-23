@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { Network } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
-export default function Login() {
+export default function Signup() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -14,31 +15,37 @@ export default function Login() {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-    
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      console.log('Attempting to sign in with:', { email });
+      console.log('Attempting to sign up with:', { email });
       
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
-        password: password,
+        password: password
       });
 
-      if (signInError) {
-        console.error('Sign in error details:', {
-          message: signInError.message,
-          status: signInError.status,
-          name: signInError.name,
-          stack: signInError.stack
+      if (signUpError) {
+        console.error('Sign up error details:', {
+          message: signUpError.message,
+          status: signUpError.status,
+          name: signUpError.name,
+          stack: signUpError.stack
         });
-        throw signInError;
+        throw signUpError;
       }
 
       if (data.user) {
-        console.log('Sign in successful:', data.user);
-        navigate('/feed');
+        console.log('Sign up successful:', data.user);
+        setError('Please check your email for a confirmation link');
       } else {
         console.error('No user data returned');
-        setError('Login failed. Please try again.');
+        setError('Sign up failed. Please try again.');
       }
     } catch (err) {
       console.error('Full error details:', {
@@ -46,13 +53,7 @@ export default function Login() {
         name: (err as Error).name,
         stack: (err as Error).stack
       });
-      if ((err as Error).message.includes('Invalid login credentials')) {
-        setError('Invalid email or password');
-      } else if ((err as Error).message.includes('Email not confirmed')) {
-        setError('Please confirm your email address before logging in');
-      } else {
-        setError(`Login failed: ${(err as Error).message}`);
-      }
+      setError(`Sign up failed: ${(err as Error).message}`);
     } finally {
       setIsLoading(false);
     }
@@ -65,7 +66,7 @@ export default function Login() {
           <Network className="h-12 w-12 text-green-800" />
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Sign in to your account
+          Create your account
         </h2>
       </div>
 
@@ -99,10 +100,28 @@ export default function Login() {
                   id="password"
                   name="password"
                   type="password"
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                Confirm Password
+              </label>
+              <div className="mt-1">
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
                 />
               </div>
@@ -120,16 +139,16 @@ export default function Login() {
                 disabled={isLoading}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-800 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Signing in...' : 'Sign in'}
+                {isLoading ? 'Creating account...' : 'Create account'}
               </button>
             </div>
             <div className="text-center">
               <button
                 type="button"
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/login')}
                 className="text-sm text-green-800 hover:text-green-700"
               >
-                Don't have an account? Join Network
+                Already have an account? Sign in
               </button>
             </div>
           </form>
@@ -137,4 +156,4 @@ export default function Login() {
       </div>
     </div>
   );
-}
+} 
